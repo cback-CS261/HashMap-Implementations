@@ -1,8 +1,8 @@
-# Name:
-# OSU Email:
+# Name: Chance Back
+# OSU Email: backc@oregonstate.edu
 # Course: CS261 - Data Structures
-# Assignment:
-# Due Date:
+# Assignment: 6
+# Due Date: 8/9/22
 # Description:
 
 

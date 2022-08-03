@@ -1,9 +1,14 @@
-# Name:
-# OSU Email:
+# Name: Chance Back
+# OSU Email: backc@oregonstate.edu
 # Course: CS261 - Data Structures
-# Assignment:
-# Due Date:
-# Description:
+# Assignment: 6
+# Due Date: 8/9/22
+# Description:  This program contains a class for implementing hash maps that 
+#               utilize chaining to deal with hash collisions. The underlying 
+#               data structures used are imported Dynamic Array and Linked List 
+#               classes. Two hash functions are also imported as well. The
+#               program also contains a separate function for finding the mode
+#               of a dynamic array using the hash map.
 
 
 from a6_include import (DynamicArray, LinkedList,
@@ -88,69 +93,243 @@ class HashMap:
 
     # ------------------------------------------------------------------ #
 
-    def put(self, key: str, value: object) -> None:
+    def put(self, key: str, value: object, update_size: bool=True) -> None:
         """
-        TODO: Write this implementation
+        Updates the key / value pair in the hash map. If the given key already 
+        exists in the hash map, its associated value is replaced with the new 
+        value. If the given key is not in the hash map, a new key / value 
+        pair is added.
+
+        :param key:     key to be used in the key / value pair
+        :param value:   value to be used in the key / value pair
+
+        :return:        None
         """
-        pass
+        # Determine the index of the given key
+        hash = self._hash_function(key)
+        index = hash % self._capacity
+
+        # Find the bucket the key / value pair will be located
+        bucket = self._buckets.get_at_index(index)
+
+        # Check if bucket contains key / value pair and update or add accordingly
+        node = bucket.contains(key)
+        if node:
+            node.value = value
+        else:
+            bucket.insert(key, value)
+            self._size += 1
+
+        # Resizes table if load factor gets too high by default
+        if update_size and self.table_load() > 8:
+            new_capacity = self._size * 2
+            self.resize_table(new_capacity)
 
     def empty_buckets(self) -> int:
         """
-        TODO: Write this implementation
+        Returns the number of empty buckets in the hash table.
+
+        :return:    empty buckets in the hash table
         """
-        pass
+        # Iterate through buckets tracking the empty ones
+        empty_buckets = 0
+        for num in range(self._capacity):
+            bucket = self._buckets.get_at_index(num)
+            if bucket.length() == 0:
+                empty_buckets += 1
+
+        # Return the number of empty buckets
+        return empty_buckets
 
     def table_load(self) -> float:
         """
-        TODO: Write this implementation
+        Returns the current hash table load factor.
+
+        :return:    load factor of hash table
         """
-        pass
+        # Calculate load factor
+        load_factor = self._size / self._capacity
+
+        # Return load factor
+        return load_factor
 
     def clear(self) -> None:
         """
-        TODO: Write this implementation
+        Clears the contents of the hash map. It does not change the underlying 
+        hash table capacity.
+
+        :return:    None
         """
-        pass
+        # Iterate through buckets and clear out the underlying linked lists
+        for num in range(self._capacity):
+            self._buckets.set_at_index(num, LinkedList())
+        
+        # Reset size to zero when finished
+        self._size = 0
 
     def resize_table(self, new_capacity: int) -> None:
         """
-        TODO: Write this implementation
+        Changes the capacity of the internal hash table. All existing key / value
+        pairs will remain in the new hash map, and all hash table links will be 
+        rehashed.
+
+        :param new_capacity:    new capacity of the hash map
+
+        :return:                None
         """
-        pass
+        # Check if new capacity is valid
+        if new_capacity < 1:
+            return
+
+        # Store old array and capacity
+        old_map = self._buckets
+        old_capacity = self._capacity
+
+        # Create new hash map with updated capacity and size
+        self._buckets = DynamicArray()
+
+        if self._is_prime(new_capacity):
+            self._capacity = new_capacity
+        else:
+            self._capacity = self._next_prime(new_capacity)
+
+        for _ in range(self._capacity):
+            self._buckets.append(LinkedList())
+
+        self._size = 0
+
+        # Iterate through all buckets in old array and rehash values to new table
+        for num in range(old_capacity):
+            bucket = old_map.get_at_index(num)
+            for node in bucket:
+                self.put(node.key, node.value, False)
 
     def get(self, key: str) -> object:
         """
-        TODO: Write this implementation
+        Returns the value associated with the given key. If the key is not in 
+        the hash map, the method returns None.
+
+        :param key: key to search for in hash map
+
+        :return:    value associated with key or None if key not found
         """
-        pass
+        # Determine the index of the given key
+        hash = self._hash_function(key)
+        index = hash % self._capacity
+
+        # Find the bucket the key / value pair will be located
+        bucket = self._buckets.get_at_index(index)
+
+        # Check if bucket contains key / value pair and return value if found
+        node = bucket.contains(key)
+        if node:
+            return node.value
 
     def contains_key(self, key: str) -> bool:
         """
-        TODO: Write this implementation
+        Returns True if the given key is in the hash map, otherwise it returns False.
+
+        :param key: key to be searched for in hash map
+
+        :return:    True/False depending on if key is found
         """
-        pass
+        # Check if hash map is empty
+        if self._size == 0:
+            return False
+
+        # Determine the index of the given key
+        hash = self._hash_function(key)
+        index = hash % self._capacity
+
+        # Find the bucket the key / value pair will be located
+        bucket = self._buckets.get_at_index(index)
+
+        # Check if bucket contains key / value pair and return results
+        node = bucket.contains(key)
+        if node:
+            return True
+        else:
+            return False
 
     def remove(self, key: str) -> None:
         """
-        TODO: Write this implementation
+        Removes the given key and its associated value from the hash map. If 
+        the key is not in the hash map, the method does nothing.
+
+        :param key: key of key / value pair to be removed from hash map
+
+        :return:    None
         """
-        pass
+        # Determine the index of the given key
+        hash = self._hash_function(key)
+        index = hash % self._capacity
+
+        # Find the bucket the key / value pair will be located
+        bucket = self._buckets.get_at_index(index)
+
+        # Check if bucket contains key / value and remove if found
+        result = bucket.remove(key)
+        if result:
+            self._size -= 1
 
     def get_keys_and_values(self) -> DynamicArray:
         """
-        TODO: Write this implementation
-        """
-        pass
+        Returns a dynamic array where each index contains a tuple of a 
+        key / value pair stored in the hash map.
 
+        :return:    dynamic array containing all key / value pairs in hash map
+        """
+        # Iterate through all buckets in hash map and append key / value tuple
+        key_val_arr = DynamicArray()
+        for num in range(self._capacity):
+            bucket = self._buckets.get_at_index(num)
+            for node in bucket:
+                key_val_pair = (node.key, node.value)
+                key_val_arr.append(key_val_pair)
+
+        # Return array of key / value pairs
+        return key_val_arr
 
 def find_mode(da: DynamicArray) -> (DynamicArray, int):
     """
-    TODO: Write this implementation
+    Returns a tuple containing, in this order, a dynamic array comprising the 
+    mode (most occurring) value/s of the array, and an integer that represents 
+    the highest frequency (how many times they appear).
+
+    :param da:  dynamic array to used to search for mode
+
+    :return:    tuple containing a new dynamic array of most occuring values 
+                and an integer representing the highest frequency
     """
-    # if you'd like to use a hash map,
-    # use this instance of your Separate Chaining HashMap
+    #Initialize hash map to store frequencies
     map = HashMap()
 
+    # Iterate through dynamic array tracking frequency of values in hash map
+    for num in range(da.length()):
+        key = da.get_at_index(num)
+        current_freq = map.get(key)
+
+        if not current_freq:
+            current_freq = 0
+        
+        map.put(key, current_freq + 1)
+
+    # Convert hash map of frequencies into array
+    map_arr = map.get_keys_and_values()
+
+    # Iterate through array of frequencies and find/store the mode(s)
+    highest_freq = 0
+    for num in range(map_arr.length()):
+        key_val_pair = map_arr.get_at_index(num)
+        if key_val_pair[1] > highest_freq:
+            highest_freq = key_val_pair[1]
+            modes_arr = DynamicArray()
+            modes_arr.append(key_val_pair[0])
+        elif key_val_pair[1] == highest_freq:
+            modes_arr.append(key_val_pair[0])
+
+    # Return the mode(s) and frequency
+    return (modes_arr, highest_freq)
 
 # ------------------- BASIC TESTING ---------------------------------------- #
 
