@@ -4,7 +4,7 @@
 # Assignment: 6
 # Due Date: 8/9/22
 # Description:  This program contains a class for implementing hash maps that 
-#               utilize chaining to deal with hash collisions. The underlying 
+#               utilizes chaining to deal with hash collisions. The underlying 
 #               data structures used are imported Dynamic Array and Linked List 
 #               classes. Two hash functions are also imported as well. The
 #               program also contains a separate function for finding the mode
@@ -100,8 +100,9 @@ class HashMap:
         value. If the given key is not in the hash map, a new key / value 
         pair is added.
 
-        :param key:     key to be used in the key / value pair
-        :param value:   value to be used in the key / value pair
+        :param key:         key to be used in the key / value pair
+        :param value:       value to be used in the key / value pair
+        :param update_size: boolean value to determine if size is auto adujusted
 
         :return:        None
         """
@@ -121,7 +122,7 @@ class HashMap:
             self._size += 1
 
         # Resizes table if load factor gets too high by default
-        if update_size and self.table_load() > 8:
+        if update_size and self.table_load() > 10:
             new_capacity = self._size * 2
             self.resize_table(new_capacity)
 

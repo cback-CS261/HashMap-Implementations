@@ -3,7 +3,11 @@
 # Course: CS261 - Data Structures
 # Assignment: 6
 # Due Date: 8/9/22
-# Description:
+# Description:  This program contains a class for implementing hash maps that 
+#               utilizes open addressing to deal with hash collisions. The 
+#               underlying data structures used are imported Dynamic Array and 
+#               Linked List classes. Two hash functions are also imported as 
+#               well.
 
 
 from a6_include import (DynamicArray, HashEntry,
@@ -88,60 +92,215 @@ class HashMap:
 
     def put(self, key: str, value: object) -> None:
         """
-        TODO: Write this implementation
+        Updates the key / value pair in the hash map. If the given key already 
+        exists in the hash map, its associated value is replaced with the new 
+        value. If the given key is not in the hash map, a new key / value pair 
+        is added.
+
+        :param key:         key to be used in the key / value pair
+        :param value:       value to be used in the key / value pair
+
+        :return:        None
         """
-        # remember, if the load factor is greater than or equal to 0.5,
-        # resize the table before putting the new key/value pair
-        pass
+        # Resizes table if load factor gets too high by default
+        if self.table_load() >= 0.5:
+            new_capacity = self._capacity * 2
+            self.resize_table(new_capacity)
+
+        # Find the initial index and create variable for quadratic probing
+        hash = self._hash_function(key)
+        init_index = hash % self._capacity
+        j = 0
+
+        # Probe for the correct index and insert key / value pair when found
+        for _ in range(self._capacity):
+            quad_index = (init_index + j**2) % self._capacity
+            bucket = self._buckets.get_at_index(quad_index)
+            if not bucket or bucket.is_tombstone:
+                entry = HashEntry(key, value)
+                self._buckets.set_at_index(quad_index, entry)
+                self._size += 1
+                return
+            elif bucket.key == key:
+                bucket.value = value
+                return
+            
+            # Increment quadratic probing variable
+            j += 1
 
     def table_load(self) -> float:
         """
-        TODO: Write this implementation
+        Returns the current hash table load factor
+
+        :return:    hash table load factor
         """
-        pass
+        # Calculate load factor
+        load_factor = self._size / self._capacity
+
+        # Return load factor
+        return load_factor
 
     def empty_buckets(self) -> int:
         """
-        TODO: Write this implementation
+        Returns the number of empty buckets in the hash table.
+        
+        :return:    empty buckets in the hash table
         """
-        pass
+        # Calculate empty buckets
+        empty_buckets = self._capacity - self._size
+
+        # Return empty buckets
+        return empty_buckets
 
     def resize_table(self, new_capacity: int) -> None:
         """
-        TODO: Write this implementation
+        Changes the capacity of the internal hash table. All existing key / value
+        pairs will remain in the new hash map, and all hash table links will be 
+        rehashed.
+
+        :param new_capacity:    new capacity of the hash map
+
+        :return:                None
         """
-        # remember to rehash non-deleted entries into new table
-        pass
+        # Check if new capacity is valid
+        if new_capacity < self._size:
+            return
+
+        # Store old array and capacity
+        old_map = self._buckets
+        old_capacity = self._capacity
+
+        # Create new hash map with updated capacity and size
+        self._buckets = DynamicArray()
+
+        if self._is_prime(new_capacity):
+            self._capacity = new_capacity
+        else:
+            self._capacity = self._next_prime(new_capacity)
+
+        for _ in range(self._capacity):
+            self._buckets.append(None)
+
+        self._size = 0
+
+        # Iterate through all buckets in old array and rehash values to new table
+        for num in range(old_capacity):
+            bucket = old_map.get_at_index(num)
+            if bucket and not bucket.is_tombstone:
+                self.put(bucket.key, bucket.value)
 
     def get(self, key: str) -> object:
         """
-        TODO: Write this implementation
+        Returns the value associated with the given key. If the key is not in 
+        the hash map, the method returns None.
+
+        :param key: key to search for in hash map
+
+        :return:    value associated with key or None if key not found
         """
-        pass
+        # Find the initial index and create variable for quadratic probing
+        hash = self._hash_function(key)
+        init_index = hash % self._capacity
+        j = 0
+
+        # Probe for the correct key / value pair and return value if found
+        for _ in range(self._capacity):
+            quad_index = (init_index + j**2) % self._capacity
+            bucket = self._buckets.get_at_index(quad_index)
+            if not bucket:
+                return
+            elif not bucket.is_tombstone and key == bucket.key:
+                return bucket.value
+            
+            # Increment quadratic probing variable
+            j += 1
 
     def contains_key(self, key: str) -> bool:
         """
-        TODO: Write this implementation
+        Returns True if the given key is in the hash map, otherwise it returns 
+        False.
+
+        :param key: key to be searched for
+
+        :return: True/False depending on if key is found
         """
-        pass
+        # Find the initial index and create variable for quadratic probing
+        hash = self._hash_function(key)
+        init_index = hash % self._capacity
+        j = 0
+
+        # Probe for the correct key and return True if found else return False
+        for _ in range(self._capacity):
+            quad_index = (init_index + j**2) % self._capacity
+            bucket = self._buckets.get_at_index(quad_index)
+            if not bucket:
+                return False
+            elif not bucket.is_tombstone and key == bucket.key:
+                return True
+
+            # Increment quadratic probing variable
+            j += 1
 
     def remove(self, key: str) -> None:
         """
-        TODO: Write this implementation
+        Removes the given key and its associated value from the hash map if it
+        is in the hash map.
+
+        :param key: key of key / value pair to be removed from hash map
+
+        :return:    None
         """
-        pass
+        # Find the initial index and create variable for quadratic probing
+        hash = self._hash_function(key)
+        init_index = hash % self._capacity
+        j = 0
+
+        # Probe for the correct key and return remove if found
+        for _ in range(self._capacity):
+            quad_index = (init_index + j**2) % self._capacity
+            bucket = self._buckets.get_at_index(quad_index)
+            if not bucket:
+                return
+            elif not bucket.is_tombstone and key == bucket.key:
+                # Remove by setting .is_tombstone to True and reducing map size
+                bucket.is_tombstone = True
+                self._size -= 1
+
+            # Increment quadratic probing variable
+            j += 1
+
 
     def clear(self) -> None:
         """
-        TODO: Write this implementation
+        Clears the contents of the hash map. It does not change the underlying 
+        hash table capacity.
+
+        :return:    None
         """
-        pass
+        # Empty contents of array while maintaining compacity
+        for num in range(self._capacity):
+            self._buckets.set_at_index(num, None)
+        
+        # Reset size
+        self._size = 0
 
     def get_keys_and_values(self) -> DynamicArray:
         """
-        TODO: Write this implementation
+        Returns a dynamic array where each index contains a tuple of a 
+        key / value pair stored in the hash map.
+
+        :return:    dynamic array key / value pair tuples
         """
-        pass
+        # Iterate through all buckets in hash map and append key / value tuple
+        key_val_arr = DynamicArray()
+        for num in range(self._capacity):
+            bucket = self._buckets.get_at_index(num)
+            if bucket and not bucket.is_tombstone:
+                key_val_pair = (bucket.key, bucket.value)
+                key_val_arr.append(key_val_pair)
+
+        # Return array of key / value pairs
+        return key_val_arr
 
 
 # ------------------- BASIC TESTING ---------------------------------------- #
